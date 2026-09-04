@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniPost • Social Media Post Generator</title>
+  <meta name="description"
+    content="Draft tailored posts for LinkedIn, Twitter/X, Instagram, and Facebook, and manage them in one place.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%232f6b52%22/><text x=%2250%22 y=%2268%22 font-size=%2258%22 font-family=%22Georgia,serif%22 fill=%22white%22 text-anchor=%22middle%22>O</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="light-theme">
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">OmniPost</span>
+          <span class="brand-badge">Post generator & scheduler</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="historyBtn" class="btn btn-secondary history-trigger">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>History</span>
+          <span id="historyBadge" class="counter-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-layout">
+    <!-- Left Column: Generator Studio -->
+    <section class="studio-card">
+      <div class="card-header">
+        <div class="section-title">
+          <i class="fa-solid fa-sliders"></i>
+          <h2>Create a Post</h2>
+        </div>
+      </div>
+
+      <form id="generatorForm" class="generator-form">
+        <!-- Platform Selector Tabs -->
+        <div class="form-group">
+          <label class="form-label">
+            <span><i class="fa-solid fa-share-nodes"></i> Target Platform</span>
+            <span class="label-hint" id="platformLimitHint">Max 3,000 chars</span>
+          </label>
+          <div class="platform-grid" id="platformSelector">
+            <button type="button" class="platform-btn active" data-platform="linkedin">
+              <i class="fa-brands fa-linkedin"></i>
+              <div class="platform-info">
+                <span class="name">LinkedIn</span>
+              </div>
+            </button>
+            <button type="button" class="platform-btn" data-platform="twitter">
+              <i class="fa-brands fa-x-twitter"></i>
+              <div class="platform-info">
+                <span class="name">Twitter / X</span>
+              </div>
+            </button>
+            <button type="button" class="platform-btn" data-platform="instagram">
+              <i class="fa-brands fa-instagram"></i>
+              <div class="platform-info">
+                <span class="name">Instagram</span>
+              </div>
+            </button>
+            <button type="button" class="platform-btn" data-platform="facebook">
+              <i class="fa-brands fa-facebook"></i>
+              <div class="platform-info">
+                <span class="name">Facebook</span>
+              </div>
+            </button>
+          </div>
+          <input type="hidden" id="selectedPlatform" name="platform" value="linkedin">
+        </div>
+
+        <!-- Subject / Topic Input with Prompt Suggestions -->
+        <div class="form-group">
+          <div class="label-row">
+            <label class="form-label" for="subjectInput">
+              <i class="fa-solid fa-heading"></i> Subject / Topic <span class="required">*</span>
+            </label>
+          </div>
+
+          <div class="input-wrapper">
+            <input type="text" id="subjectInput" name="subject" class="form-control"
+              placeholder="e.g., The Future of Quantum Computing, Product Launch..." required autocomplete="off">
+            <button type="button" id="clearSubjectBtn" class="clear-input-btn" title="Clear input"
+              style="display:none;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="toneInput">
+            <i class="fa-solid fa-masks-theater"></i> Tone
+          </label>
+          <input type="text" id="toneInput" name="tone" class="form-control" placeholder="e.g., Professional, Humorous">
+        </div>
+
+        <!-- Source Documents / Reference Material -->
+        <div class="form-group">
+          <div class="label-row">
+            <label class="form-label" for="referenceContextInput">
+              <i class="fa-solid fa-file-lines"></i> Reference Documents & Knowledge Grounding
+            </label>
+            <span class="label-hint">Upload or paste notes, articles, or data</span>
+          </div>
+
+          <!-- Document Upload Dropzone & Action Bar -->
+          <div class="doc-upload-zone" id="docDropZone">
+            <input type="file" id="docFileInput" class="doc-file-hidden" multiple
+              accept=".txt,.md,.json,.csv,.doc,.docx,.pdf">
+            <div class="doc-drop-prompt" id="docDropPrompt">
+              <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+              <span>Drop files here or <strong class="browse-link">browse</strong> (.txt, .md, .csv, .json)</span>
+            </div>
+            <div class="doc-file-chips" id="docFileChips" style="display:none;"></div>
+          </div>
+
+          <div class="input-wrapper">
+            <textarea id="referenceContextInput" name="reference_context" class="form-control textarea-md"
+              placeholder="Paste article excerpts, research notes, meeting takeaways, or data points to ground the AI in accurate facts..."
+              rows="3"></textarea>
+            <button type="button" id="clearDocBtn" class="clear-input-btn" title="Clear documents"
+              style="display:none;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Key Message & Target Audience (2 columns) -->
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" for="keyMessageInput">
+              <i class="fa-solid fa-bullseye"></i> Key Message / Main Point
+            </label>
+            <textarea id="keyMessageInput" name="key_message" class="form-control"
+              placeholder="What is the one core insight or takeaway you want readers to remember?" rows="2"></textarea>
+          </div>
+
+          <div class="form-group flex-1">
+            <label class="form-label" for="targetAudienceInput">
+              <i class="fa-solid fa-users"></i> Target Audience
+            </label>
+            <input type="text" id="targetAudienceInput" name="target_audience" class="form-control"
+              placeholder="e.g. Founders, Engineers, Marketers, Students" value="">
+          </div>
+        </div>
+
+        <!-- Length & Emoji Controls (2 columns) -->
+        <div class="form-row">
+          <!-- Length Selector -->
+          <div class="form-group flex-1">
+            <label class="form-label" for="lengthInput">
+              <i class="fa-solid fa-ruler-horizontal"></i> Length (Words)
+            </label>
+            <input type="number" id="lengthInput" name="length" class="form-control" placeholder="e.g. 150" min="20"
+              max="1000" step="10" value="150">
+          </div>
+          <!-- Emoji Toggle -->
+          <div class="form-group flex-1">
+            <label class="form-label" for="emojiToggle">
+              <span><i class="fa-solid fa-icons"></i> Include Emojis</span>
+            </label>
+            <div class="emoji-toggle-row">
+              <span class="emoji-toggle-label off-label">Off</span>
+              <label class="switch" id="emojiSwitchLabel">
+                <input type="checkbox" id="emojiToggle" checked>
+                <span class="slider"></span>
+              </label>
+              <span class="emoji-toggle-label on-label">On 🔥</span>
+            </div>
+            <input type="hidden" id="selectedEmoji" name="include_emojis" value="engaging">
+          </div>
+        </div>
+
+
+
+        <!-- Submit Button -->
+        <button type="submit" id="generateBtn" class="btn btn-primary btn-block btn-lg">
+          <span class="btn-icon"><i class="fa-solid fa-paper-plane"></i></span>
+          <span class="btn-text">Generate Optimized Post</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Right Column: Live Social Card Preview & Publishing Hub -->
+    <section class="preview-card">
+      <div class="card-header">
+        <div class="section-title">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <h2>Social Preview & Publishing</h2>
+        </div>
+        <div class="preview-actions">
+          <button id="copyPostBtn" class="btn btn-sm btn-secondary" title="Copy to clipboard" disabled>
+            <i class="fa-regular fa-copy"></i> Copy Post
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Loading State Indicator -->
+      <div id="generationProgress" class="progress-container" style="display:none;">
+        <div class="progress-glow-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status">
+          <div class="spinner"></div>
+          <div class="progress-text-col">
+            <span id="progressStage" class="stage-title">Drafting your post...</span>
+            <span class="stage-desc">Matching tone and platform format</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Preview Container -->
+      <div class="preview-viewport">
+        <!-- Mockup Card Container -->
+        <div id="mockupCard" class="mockup-card platform-linkedin">
+          <!-- Mockup Header -->
+          <div class="mockup-header">
+            <div class="mockup-avatar" id="mockupAvatar">
+              <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="mockup-user-info">
+              <div class="user-name-row">
+                <span class="mockup-author" id="mockupAuthor">Alex Chen</span>
+                <span class="verified-badge" id="mockupVerified"><i class="fa-solid fa-circle-check"></i></span>
+                <span class="user-handle" id="mockupHandle">• 1st</span>
+              </div>
+              <span class="user-bio" id="mockupBio">AI Founder & Tech Strategist</span>
+              <span class="post-time" id="mockupTime">Just now • <i class="fa-solid fa-globe"></i></span>
+            </div>
+            <div class="mockup-more">
+              <i class="fa-solid fa-ellipsis"></i>
+            </div>
+          </div>
+
+          <!-- Mockup Post Content -->
+          <div class="mockup-body" id="mockupBody">
+            <div class="placeholder-state">
+              <div class="placeholder-icon">
+                <i class="fa-solid fa-pen-nib"></i>
+              </div>
+              <h3>Your AI Generated Post Will Appear Here</h3>
+              <p>Configure your topic, target platform, and tone on the left, then click <strong>Generate Optimized
+                  Post</strong> to experience multi-stage post creation.</p>
+            </div>
+          </div>
+
+          <!-- Mockup Engagement Footer -->
+          <div class="mockup-footer" id="mockupFooter">
+            <div class="engagement-stats">
+              <span><i class="fa-solid fa-thumbs-up"></i> <i class="fa-solid fa-heart"></i> 42 reactions</span>
+              <span>12 comments • 5 reposts</span>
+            </div>
+            <div class="action-buttons-bar">
+              <button class="mock-btn"><i class="fa-regular fa-thumbs-up"></i> Like</button>
+              <button class="mock-btn"><i class="fa-regular fa-comment"></i> Comment</button>
+              <button class="mock-btn"><i class="fa-solid fa-arrows-rotate"></i> Repost</button>
+              <button class="mock-btn"><i class="fa-regular fa-paper-plane"></i> Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post Stats Bar -->
+      <div class="stats-card">
+        <div class="stat-pill">
+          <span class="stat-label">Characters</span>
+          <span class="stat-value" id="charCount">0</span>
+          <span class="stat-sub" id="charLimitLabel">/ 3,000 max</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Words</span>
+          <span class="stat-value" id="wordCount">0</span>
+          <span class="stat-sub">~0 min read</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Hashtags</span>
+          <span class="stat-value" id="hashtagCount">0</span>
+          <span class="stat-sub">Detected</span>
+        </div>
+      </div>
+
+      <!-- Action Hub: Post to Platform -->
+      <div class="publish-hub">
+        <div class="hub-header">
+          <span><i class="fa-solid fa-paper-plane"></i> Post to Platform / Export</span>
+        </div>
+        <div class="hub-actions-grid">
+          <a id="shareTwitterBtn" href="#" target="_blank" rel="noopener noreferrer" class="share-btn twitter-share"
+            title="Share directly on Twitter / X">
+            <i class="fa-brands fa-x-twitter"></i>
+            <span>Post to X</span>
+          </a>
+          <a id="shareLinkedInBtn" href="#" target="_blank" rel="noopener noreferrer" class="share-btn linkedin-share"
+            title="Share on LinkedIn">
+            <i class="fa-brands fa-linkedin"></i>
+            <span>Share to LinkedIn</span>
+          </a>
+          <a id="shareFacebookBtn" href="#" target="_blank" rel="noopener noreferrer" class="share-btn facebook-share"
+            title="Share on Facebook">
+            <i class="fa-brands fa-facebook"></i>
+            <span>Post to Facebook</span>
+          </a>
+          <button id="downloadTextBtn" class="share-btn download-share" title="Download text file">
+            <i class="fa-solid fa-download"></i>
+            <span>Download .txt</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Reasoning & Reflection Details View -->
+      <div class="reflection-drawer" id="reflectionDrawer" style="display:none;">
+        <button type="button" class="reflection-toggle" id="reflectionToggleBtn">
+          <span><i class="fa-solid fa-magnifying-glass-chart"></i> View generation notes</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="reflection-body" id="reflectionContent" style="display:none;">
+          <div class="critique-section">
+            <h4><i class="fa-solid fa-clipboard-check"></i> Notes & self-review</h4>
+            <pre id="reflectionText" class="code-box"></pre>
+          </div>
+          <div class="critique-section">
+            <h4><i class="fa-solid fa-route"></i> Drafting plan</h4>
+            <pre id="cotPlanText" class="code-box"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Slide-out History Drawer -->
+  <div class="history-overlay" id="historyOverlay"></div>
+  <aside class="history-drawer" id="historyDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <h3>Generated Post History</h3>
+      </div>
+      <div class="drawer-controls">
+        <button id="clearHistoryBtn" class="btn-icon-subtle text-danger" title="Clear all history">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button id="closeHistoryBtn" class="btn-icon-subtle" title="Close drawer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- History Search & Filter -->
+    <div class="history-filter-bar">
+      <div class="input-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="historySearchInput" class="form-control" placeholder="Search saved posts...">
+      </div>
+      <div class="filter-tabs" id="historyPlatformFilter">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="linkedin">LinkedIn</button>
+        <button class="filter-tab" data-filter="twitter">X</button>
+        <button class="filter-tab" data-filter="instagram">Instagram</button>
+      </div>
+    </div>
+
+    <!-- History Items List -->
+    <div class="history-list" id="historyList">
+      <div class="empty-history">
+        <i class="fa-solid fa-ghost"></i>
+        <p>No generated posts yet. Generate your first post to see it saved here!</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Floating Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
